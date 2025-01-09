@@ -10,12 +10,12 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Courier New', monospace;
         }
 
         /* Body Styling */
         body {
-            background: linear-gradient(to right, #6a11cb, #2575fc);
+            background: linear-gradient(to right, #9756dc, #2575fc);
             color: #fff;
             display: flex;
             align-items: center;
@@ -23,6 +23,7 @@
             height: 100vh;
             padding: 20px;
             flex-direction: column;
+            transition: opacity 1s ease;
         }
 
         /* Container Styling */
@@ -63,6 +64,19 @@
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
         }
 
+        /* Dropdown Styling */
+        select {
+            margin-top: 10px;
+            padding: 8px;
+            font-size: 16px;
+            border-radius: 10px;
+            border: none;
+            outline: none;
+            background: rgba(255, 255, 255, 0.8);
+            color: #333;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
         /* Submit Button */
         button {
             margin-top: 20px;
@@ -82,62 +96,65 @@
             color: #fff;
         }
 
-        /* Google Trends Container */
-        #trends-container {
-            display: none;
-            margin-top: 30px;
-            width: 100%;
-            max-width: 600px;
-            background: #fff;
-            color: #333;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        /* Fading Out Class */
+        .fade-out {
+            opacity: 0;
+            transition: opacity 1s ease;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Enter Keywords</h1>
-        <textarea id="keywords" placeholder="Type your keywords here..."></textarea>
-        <button onclick="submitKeywords()">Submit</button>
+        <h1>輸入關鍵字和年份</h1>
+        <textarea id="keywords" placeholder="輸入關鍵字..."></textarea>
+        <select id="year"></select>
+        <button onclick="submitKeywords()">送出至 <strong><i>Google Trends</i></strong></button>
     </div>
-    <div id="trends-container"></div>
-
-    <script type="text/javascript" src="https://ssl.gstatic.com/trends_nrtr/3940_RC01/embed_loader.js"></script>
     <script>
+        // Dynamically populate year options
+        const yearDropdown = document.getElementById('year');
+        const currentYear = new Date().getFullYear();
+        const years = ['today 12-m'];
+        for (let i = 1; i < 5; i++) {
+            years.push(`${currentYear - i}-01-01`);
+        }
+        years.forEach(year => {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year === 'today 12-m' ? '最近一年' : year.split('-')[0];
+            yearDropdown.appendChild(option);
+        });
+
+        // Submit keywords
         function submitKeywords() {
             const keywords = document.getElementById('keywords').value.trim();
+            const v_year = document.getElementById('year').value;
+
             if (!keywords) {
-                alert('Please enter some keywords before submitting.');
+                alert('請輸入關鍵字');
                 return;
             }
 
-            // Display the trends container
-            const trendsContainer = document.getElementById('trends-container');
-            trendsContainer.style.display = 'block';
-            trendsContainer.innerHTML = '<p>Loading Google Trends...</p>';
+            // Add fade-out animation to the body
+            document.body.classList.add('fade-out');
 
-            // Dynamically load Google Trends widget
-            trends.embed.renderExploreWidget(
-                "RELATED_TOPICS",
-                {
-                    "comparisonItem": [
-                        {
-                            "keyword": keywords,
-                            "geo": "TW",
-                            "time": "today 12-m"
-                        }
-                    ],
-                    "category": 0,
-                    "property": ""
-                },
-                {
-                    "exploreQuery": `geo=TW&q=${encodeURIComponent(keywords)}&hl=zh-TW&date=today 12-m`,
-                    "guestPath": "https://trends.google.com:443/trends/embed/"
+            // Redirect to Google Trends
+            setTimeout(() => {
+                if (v_year === 'today 12-m') {
+                    window.location.href = `https://trends.google.com/trends/explore?q=${encodeURIComponent(keywords)}&geo=TW&hl=zh-TW&date=${v_year}`;
+                } else {
+                    window.location.href = `https://trends.google.com/trends/explore?date=${v_year}%20${currentYear}-12-31&geo=TW&q=${encodeURIComponent(keywords)}&hl=zh-TW`;
                 }
-            );
+            }, 1000); // 1 second delay
         }
+
+        // Allow pressing "Enter" to submit
+        document.getElementById('keywords').addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent adding a new line
+                submitKeywords();
+            }
+        });
     </script>
 </body>
 </html>
